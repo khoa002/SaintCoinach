@@ -189,8 +189,11 @@ namespace Godbert.ViewModels {
                 else
                     s.Write(",");
                 s.Write("[{0},", kvp.Key);
-                if (kvp.Value != null)
-                    s.Write(kvp.Value.ToString().Replace("\"", "\"\""));
+                if (kvp.Value != null) {
+                    string result = kvp.Value.ToString().Replace("\"", "\"\"");
+                    result = Regex.Replace(result, @"\t|\n|\r", " ");
+                    s.Write(result);
+                }
                 s.Write("]");
             }
             s.Write("\"");
