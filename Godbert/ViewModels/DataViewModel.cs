@@ -11,10 +11,14 @@ using System.Windows;
 using SaintCoinach.Ex.Relational;
 
 namespace Godbert.ViewModels {
+
     using Commands;
+    using System.Text.RegularExpressions;
 
     public class DataViewModel : ObservableBase {
+
         #region Fields
+
         private string _SelectedSheetName;
         private IRelationalSheet _SelectedSheet;
         private DelegateCommand _ExportCsvCommand;
@@ -22,9 +26,11 @@ namespace Godbert.ViewModels {
         private IEnumerable<string> _FilteredSheets;
         private string _FilterDataTerm;
         private ObservableCollection<BookmarkViewModel> _Bookmarks = new ObservableCollection<BookmarkViewModel>();
-        #endregion
+
+        #endregion Fields
 
         #region Properties
+
         public ICommand ExportCsvCommand { get { return _ExportCsvCommand ?? (_ExportCsvCommand = new DelegateCommand(OnExportCsv)); } }
         public SaintCoinach.ARealmReversed Realm { get; private set; }
         public MainViewModel Parent { get; private set; }
@@ -42,6 +48,7 @@ namespace Godbert.ViewModels {
                 Settings.Default.SelectedSheetName = value;
             }
         }
+
         public IRelationalSheet SelectedSheet {
             get {
                 if (string.IsNullOrWhiteSpace(SelectedSheetName))
@@ -51,6 +58,7 @@ namespace Godbert.ViewModels {
                 return _SelectedSheet;
             }
         }
+
         public string FilterSheetTerm {
             get { return _FilterSheetTerm; }
             set {
@@ -86,9 +94,11 @@ namespace Godbert.ViewModels {
         public Visibility BookmarksVisibility {
             get { return _Bookmarks.Count > 0 ? Visibility.Visible : Visibility.Collapsed; }
         }
-        #endregion
+
+        #endregion Properties
 
         #region Constructor
+
         public DataViewModel(SaintCoinach.ARealmReversed realm, MainViewModel parent) {
             this.Realm = realm;
             this.Parent = parent;
@@ -101,9 +111,11 @@ namespace Godbert.ViewModels {
 
             _Bookmarks.CollectionChanged += _Bookmarks_CollectionChanged;
         }
-        #endregion
+
+        #endregion Constructor
 
         #region Export
+
         private void OnExportCsv() {
             if (SelectedSheet == null)
                 return;
@@ -119,13 +131,15 @@ namespace Godbert.ViewModels {
             if (dlg.ShowDialog().GetValueOrDefault(false))
                 SaveAsCsv(SelectedSheet, dlg.FileName);
         }
+
         private static string FixName(string original) {
             var idx = original.LastIndexOf('/');
             if (idx >= 0)
                 return original.Substring(idx + 1);
             return original;
         }
-        static void SaveAsCsv(IRelationalSheet sheet, string path) {
+
+        private static void SaveAsCsv(IRelationalSheet sheet, string path) {
             using (var s = new StreamWriter(path, false, Encoding.UTF8)) {
                 var indexLine = new StringBuilder("key");
                 var nameLine = new StringBuilder("#");
@@ -155,14 +169,18 @@ namespace Godbert.ViewModels {
                             WriteDict(s, v as IDictionary<int, object>);
                         else if (IsUnescaped(v))
                             s.Write(",{0}", v);
-                        else
-                            s.Write(",\"{0}\"", v.ToString().Replace("\"", "\"\""));
+                        else {
+                            string result = v.ToString().Replace("\"", "\"\"");
+                            result = Regex.Replace(result, @"\t|\n|\r", " ");
+                            s.Write(",\"{0}\"", result);
+                        }
                     }
                     s.WriteLine();
                 }
             }
         }
-        static void WriteDict(StreamWriter s, IDictionary<int, object> v) {
+
+        private static void WriteDict(StreamWriter s, IDictionary<int, object> v) {
             s.Write(",\"");
             var isFirst = true;
             foreach (var kvp in v) {
@@ -177,7 +195,8 @@ namespace Godbert.ViewModels {
             }
             s.Write("\"");
         }
-        static bool IsUnescaped(object self) {
+
+        private static bool IsUnescaped(object self) {
             return (self is Boolean
                 || self is Byte
                 || self is SByte
@@ -190,7 +209,8 @@ namespace Godbert.ViewModels {
                 || self is Single
                 || self is Double);
         }
-        #endregion
+
+        #endregion Export
 
         private void _Bookmarks_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e) {
             OnPropertyChanged(() => BookmarksVisibility);
