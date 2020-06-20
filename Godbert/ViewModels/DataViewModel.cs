@@ -13,6 +13,7 @@ using SaintCoinach.Ex.Relational;
 namespace Godbert.ViewModels {
 
     using Commands;
+    using SaintCoinach.Graphics.Viewer.Content;
     using System.Text.RegularExpressions;
 
     public class DataViewModel : ObservableBase {
@@ -22,6 +23,7 @@ namespace Godbert.ViewModels {
         private string _SelectedSheetName;
         private IRelationalSheet _SelectedSheet;
         private DelegateCommand _ExportCsvCommand;
+        private DelegateCommand _ExportJsonCommand;
         private string _FilterSheetTerm;
         private IEnumerable<string> _FilteredSheets;
         private string _FilterDataTerm;
@@ -32,6 +34,7 @@ namespace Godbert.ViewModels {
         #region Properties
 
         public ICommand ExportCsvCommand { get { return _ExportCsvCommand ?? (_ExportCsvCommand = new DelegateCommand(OnExportCsv)); } }
+        public ICommand ExportJsonCommand { get { return _ExportJsonCommand ?? (_ExportJsonCommand = new DelegateCommand(OnExportJson)); } }
         public SaintCoinach.ARealmReversed Realm { get; private set; }
         public MainViewModel Parent { get; private set; }
 
@@ -132,6 +135,20 @@ namespace Godbert.ViewModels {
                 SaveAsCsv(SelectedSheet, dlg.FileName);
         }
 
+        private void OnExportJson() {
+            if (SelectedSheet == null) { return; }
+            var dlg = new Microsoft.Win32.SaveFileDialog {
+                DefaultExt = ".json",
+                Filter = "JSON Files (*.json)|*.json",
+                AddExtension = true,
+                OverwritePrompt = true,
+                FileName = FixName(SelectedSheet.Name) + ".json"
+            };
+
+            if (dlg.ShowDialog().GetValueOrDefault(false))
+                SaveAsJson(SelectedSheet, dlg.FileName);
+        }
+
         private static string FixName(string original) {
             var idx = original.LastIndexOf('/');
             if (idx >= 0)
@@ -177,6 +194,63 @@ namespace Godbert.ViewModels {
                     }
                     s.WriteLine();
                 }
+            }
+        }
+
+        private static void SaveAsJson(IRelationalSheet sheet, string path) {
+            using (var s = new StreamWriter(path, false, Encoding.UTF8)) {
+                s.WriteLine("[");
+
+                var colIndices = new List<int>();
+                var colNames = new List<String>();
+                foreach (var col in sheet.Header.Columns) {
+                    colIndices.Add(col.Index);
+                    colNames.Add(col.Name);
+                }
+
+                bool isFirst = true;
+                foreach (var row in sheet.Cast<SaintCoinach.Ex.IRow>().OrderBy(_ => _.Key)) {
+                    if (isFirst) {
+                        isFirst = false;
+                        s.Write("\t");
+                    }
+                    else {
+                        s.Write(",");
+                    }
+                    s.WriteLine("{");
+                    string sKey = row.Key.ToString();
+                    foreach (var col in colIndices) {
+                        var content = row[col];
+                        string sContent = "";
+                        if (content == null) {
+                            sContent = "";
+                        }
+                        else if (content is IDictionary<int, object>) {
+                            var dContent = content;
+                            foreach (var kvp in dContent as IDictionary<int, object>) {
+                                sKey += "[" + kvp.Key + "]";
+                                if (kvp.Value != null) {
+                                    string result = kvp.Value.ToString().Replace("\"", "\"\"");
+                                    result = Regex.Replace(result, @"\t|\n|\r", " ");
+                                    sContent += result;
+                                }
+                            }
+                        }
+                        else if (IsUnescaped(content)) {
+                            sContent = content.ToString();
+                        }
+                        else {
+                            string result = content.ToString().Replace("\"", "\"\"");
+                            result = Regex.Replace(result, @"\t|\n|\r", " ");
+                            sContent = result;
+                        }
+                        s.WriteLine("\t\t\"{0}\":\"{1}\",", colNames[col], sContent);
+                    }
+                    s.WriteLine("\t\t\"{0}\":\"{1}\"", "Key", sKey);
+                    s.Write("\t}");
+                }
+                s.WriteLine();
+                s.WriteLine("]");
             }
         }
 

@@ -26,15 +26,15 @@
                 <MenuItem Header="French"
                           IsChecked="{Binding Path=IsFrench, Mode=OneWay}"
                           Command="{Binding Path=LanguageCommand}"
-                          CommandParameter="{x:Static ex:Language.French}"  />
+                          CommandParameter="{x:Static ex:Language.French}" />
                 <MenuItem Header="ChineseSimplified"
                           IsChecked="{Binding Path=IsChineseSimplified, Mode=OneWay}"
                           Command="{Binding Path=LanguageCommand}"
-                          CommandParameter="{x:Static ex:Language.ChineseSimplified}"  />
+                          CommandParameter="{x:Static ex:Language.ChineseSimplified}" />
                 <MenuItem Header="Korean"
                           IsChecked="{Binding Path=IsKorean, Mode=OneWay}"
                           Command="{Binding Path=LanguageCommand}"
-                          CommandParameter="{x:Static ex:Language.Korean}"  />
+                          CommandParameter="{x:Static ex:Language.Korean}" />
             </MenuItem>
             <MenuItem Header="Various">
                 <MenuItem Header="New Window"
@@ -50,6 +50,10 @@
                 <MenuItem Header="Sort by Offsets"
                           IsChecked="{Binding Path=SortByOffsets, Mode=OneWay}"
                           Command="{Binding Path=SortByOffsetsCommand}" />
+            </MenuItem>
+            <MenuItem Header="Export">
+                <MenuItem Header="Export SQL Table Structures (MySQL)"
+                          Command="{Binding Path=ExportSqlTableStructuresMySqlCommand}" />
             </MenuItem>
         </Menu>
         <TabControl>

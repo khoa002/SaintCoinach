@@ -8,13 +8,16 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace Godbert.ViewModels {
+
     using Commands;
 
     using SaintCoinach;
     using SaintCoinach.Xiv;
 
     public class MainViewModel : ObservableBase {
+
         #region Properties
+
         public ARealmReversed Realm { get; private set; }
         public EngineHelper EngineHelper { get; private set; }
         public EquipmentViewModel Equipment { get; private set; }
@@ -31,15 +34,19 @@ namespace Godbert.ViewModels {
         public bool IsChineseSimplified { get { return Realm.GameData.ActiveLanguage == SaintCoinach.Ex.Language.ChineseSimplified; } }
         public bool IsKorean { get { return Realm.GameData.ActiveLanguage == SaintCoinach.Ex.Language.Korean; } }
 
-        public bool SortByOffsets { get { return Settings.Default.SortByOffsets;} }
+        public bool SortByOffsets { get { return Settings.Default.SortByOffsets; } }
         public bool ShowOffsets { get { return Settings.Default.ShowOffsets; } }
-        #endregion
+
+        #endregion Properties
 
         #region Events
+
         public event EventHandler DataGridChanged;
-        #endregion
+
+        #endregion Events
 
         #region Constructor
+
         public MainViewModel() {
             if (!App.IsValidGamePath(Properties.Settings.Default.GamePath))
                 return;
@@ -69,7 +76,7 @@ namespace Godbert.ViewModels {
             Initialize(realm);
         }
 
-        void Initialize(ARealmReversed realm) {
+        private void Initialize(ARealmReversed realm) {
             realm.Packs.GetPack(new SaintCoinach.IO.PackIdentifier("exd", SaintCoinach.IO.PackIdentifier.DefaultExpansion, 0)).KeepInMemory = true;
 
             Realm = realm;
@@ -81,9 +88,11 @@ namespace Godbert.ViewModels {
             Demihuman = new DemihumanViewModel(this);
             Data = new DataViewModel(Realm, this);
         }
-        #endregion
+
+        #endregion Constructor
 
         #region Commands
+
         private ICommand _LanguageCommand;
         private ICommand _GameLocationCommand;
         private ICommand _NewWindowCommand;
@@ -94,7 +103,7 @@ namespace Godbert.ViewModels {
         public ICommand GameLocationCommand { get { return _GameLocationCommand ?? (_GameLocationCommand = new Commands.DelegateCommand(OnGameLocation)); } }
         public ICommand NewWindowCommand { get { return _NewWindowCommand ?? (_NewWindowCommand = new Commands.DelegateCommand(OnNewWindowCommand)); } }
         public ICommand ShowOffsetsCommand { get { return _ShowOffsetsCommand ?? (_ShowOffsetsCommand = new Commands.DelegateCommand(OnShowOffsetsCommand)); } }
-        public ICommand SortByOffsetsCommand { get { return _SortByOffsetsCommand ?? (_SortByOffsetsCommand= new Commands.DelegateCommand(OnSortByOffsetsCommand)); } }
+        public ICommand SortByOffsetsCommand { get { return _SortByOffsetsCommand ?? (_SortByOffsetsCommand = new Commands.DelegateCommand(OnSortByOffsetsCommand)); } }
 
         private void OnLanguage(SaintCoinach.Ex.Language newLanguage) {
             Realm.GameData.ActiveLanguage = newLanguage;
@@ -115,7 +124,7 @@ namespace Godbert.ViewModels {
             if (res == System.Windows.MessageBoxResult.Yes) {
                 Properties.Settings.Default.GamePath = null;
                 Properties.Settings.Default.Save();
-               
+
                 var current = System.Diagnostics.Process.GetCurrentProcess();
                 var startInfo = new System.Diagnostics.ProcessStartInfo(current.MainModule.FileName);
                 startInfo.WorkingDirectory = Directory.GetCurrentDirectory();
@@ -151,6 +160,7 @@ namespace Godbert.ViewModels {
 
             DataGridChanged?.Invoke(this, EventArgs.Empty);
         }
-        #endregion
+
+        #endregion Commands
     }
 }
